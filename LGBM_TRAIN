@@ -1,0 +1,73 @@
+import pandas as pd
+from sklearn.preprocessing import LabelEncoder
+train = pd.read_csv("train.csv")
+test = pd.read_csv("test.csv")
+train_x = train.drop(['PassengerId','Name','Survived'], axis = 1)
+test_x  = test.drop(['PassengerId', 'Name'], axis = 1)
+train_y = train['Survived']
+train_x.Age      = train_x.Age.fillna(train_x.Age.median())
+train_x.Cabin    = train_x.Cabin.fillna(train_x.Cabin.mode())
+train_x.Embarked = train_x.Embarked.fillna(train_x.Embarked.mode())
+test_x.Age.fillna(test_x.Age.median(), inplace = True)
+test_x.Cabin.fillna(test_x.Cabin.mode(), inplace = True)
+test_x.Fare.fillna(test_x.Fare.median(), inplace = True)
+train_x['type'] = 'train'
+test_x['type'] = 'test'
+df = pd.concat([train_x,test_x])
+for f in df.select_dtypes('object'):
+    if f not in ['type']:
+        print(f)
+        lbl = LabelEncoder()
+        df[f] = lbl.fit_transform(df[f].astype(str))
+train_x = df[df.type == "train"].drop("type", axis = 1)
+test_x = df[df.type == "test"].drop("type", axis = 1)
+from sklearn.model_selection import train_test_split
+
+# Create the training and test sets
+X_train, X_test, y_train, y_test= train_test_split(train_x, train_y, test_size=0.3, random_state=42)
+import lightgbm as lgb
+import numpy as np
+
+gridParams = {
+    'learning_rate': [0.005],
+    'n_estimators': [40],
+    'num_leaves': [6,8,12,16],
+    'boosting_type' : ['gbdt'],
+    'objective' : ['binary'],
+    'random_state' : [501], # Updated from 'seed'
+    'colsample_bytree' : [0.65, 0.66],
+    'subsample' : [0.7,0.75],
+    'reg_alpha' : [1,1.2],
+    'reg_lambda' : [1,1.2,1.4],
+    }
+
+model = LGBMClassifier(n_estimators = 100)
+
+
+
+mdl = lgb.LGBMClassifier(boosting_type= 'gbdt',
+          objective = 'binary',
+          n_jobs = 3, # Updated from 'nthread'
+          silent = True,
+          max_depth = params['max_depth'],
+          max_bin = params['max_bin'],
+          subsample_for_bin = params['subsample_for_bin'],
+          subsample = params['subsample'],
+          subsample_freq = params['subsample_freq'],
+          min_split_gain = params['min_split_gain'],
+          min_child_weight = params['min_child_weight'],
+          min_child_samples = params['min_child_samples'],
+          scale_pos_weight = params['scale_pos_weight'])
+
+
+model.fit(X_train,y_train)
+
+# Predict the labels of the test set: preds
+preds = model.predict(X_test)
+
+# Compute the accuracy: accuracy
+accuracy = float(np.sum(preds==y_test.ravel()))/y_test.shape[0]
+print("accuracy: %f" % (accuracy))
+# save
+import pickle
+pickle.dump(model, open('LGBM.h5', "wb"))
