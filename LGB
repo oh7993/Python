@@ -1,0 +1,40 @@
+import pickle
+import lightgbm as lgb
+from flask import Flask,jsonify,request
+import sys
+import json
+import pandas as pd
+import numpy as np
+
+# load
+xgb01 = pickle.load(open('LGBM.h5', "rb"))
+
+
+app = Flask(__name__)
+@app.route("/LGBM",methods=['POST'])
+
+def predict (Pclass =[],
+             Sex =[],
+             Age =[],
+             SibSp =[],
+             Parch =[],
+             Ticket =[],
+             Fare =[],
+             Cabin =[],
+             Embarked =[]):
+    
+    df = request.get_json()
+
+    df = pd.DataFrame([df])
+    df = df.reset_index(drop=True)
+    df = np.array(df)
+    result = xgb01.predict_proba(df)
+    result = pd.DataFrame(result)
+    result_all_json = result.to_json(orient='records')
+    return result_all_json
+
+if __name__=='__main__':
+    app.run("0.0.0.0",port=5100)
+    
+    
+    
