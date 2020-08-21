@@ -1,0 +1,24 @@
+https://www.cnblogs.com/yy-cola/p/8066020.html
+一、post 請求 (Content-Type: application/json)
+1.c = request.get_data()
+     可以獲取未經處理過的原始數據而不管內容類型,如果數據格式是json的，則取得的是json字符串，排序和請求參數一致
+
+2.c =request.get_json()
+     將請求參數做了處理，得到的是字典格式的，因此排序會打亂依據字典排序規則
+
+3.c = request.data
+     可以獲取未經處理過的原始數據，如果數據格式是json的，則取得的是json字符串，排序和請求參數一致
+
+4.c = request.json
+     剛開始使用的時候以為是一個方法這樣調用request.json()然後報錯如下：
+     Content-Type: application/json時報錯'dict' object is not callable
+     原來是個屬性，因此這樣使用request.json,就能正常使用了總結如下：
+     將請求參數做了處理，得到的是字典格式的，因此排序會打亂依據字典排序規則
+
+
+二、get請求
+    request.args.get('key')可以獲取到單個的值，
+
+    requestValues = request.args可以獲取get請求的所有參數返回值是ImmutableMultiDict類型,
+
+    requestValues.to_dict()將獲得的參數轉換為字典
